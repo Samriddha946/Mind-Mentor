@@ -1,0 +1,9 @@
+{
+  "name": "Mind Mentor: AI Study Companion",
+  "description": "An intelligent, supportive AI study companion designed to help users study smarter, stay motivated, and track their progress. Features include AI chat, study management tools, gamification, and advanced content generation and analysis capabilities powered by Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

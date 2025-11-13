@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mind Mentor: AI Study Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Satoshi:wght@400;500;700&family=Sora:wght@400;600;700;800&family=Poppins:wght@300;400;600;700;800&family=Cormorant+Garamond:wght@400;700&family=Montserrat:wght@400;900&family=Nunito+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.1",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.5.0"
+  }
+}
+</script>
+    <style>
+      :root {
+        /* Default theme variables as fallbacks */
+        --default-primary: #7D5FFF;
+        --default-secondary: #4FD1C5;
+        --default-accent: #FF7A7A;
+        --default-bg-start: #0B132B;
+        --default-bg-end: #2E1A47;
+        --default-text-color: #F5F7FA;
+        --default-glow-color: #4FD1C5;
+
+        /* NEW Mood-driven variables */
+        --primary: var(--mood-primary, var(--default-primary));
+        --secondary: var(--mood-secondary, var(--default-secondary));
+        --accent: var(--mood-accent, var(--default-accent));
+        --bg-start: var(--mood-bg-start, var(--default-bg-start));
+        --bg-end: var(--mood-bg-end, var(--default-bg-end));
+        --glow-color: var(--mood-glow, var(--default-glow-color));
+        --text-color: var(--default-text-color);
+        
+        /* Neon Serenity v2 Fonts */
+        --font-display: 'Orbitron', sans-serif;
+        --font-heading: 'Satoshi', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-landing: 'Sora', sans-serif;
+
+        /* Mood-based Fonts */
+        --font-poppins: 'Poppins', sans-serif;
+        --font-cormorant-garamond: 'Cormorant Garamond', serif;
+        --font-montserrat: 'Montserrat', sans-serif;
+        --font-nunito-sans: 'Nunito Sans', sans-serif;
+        --font-inter: 'Inter', sans-serif;
+      }
+      body {
+        font-family: var(--font-body);
+        color: var(--text-color);
+        font-size: 18px; /* Increased base font size */
+        transition: font-family 0.4s ease-in-out;
+        background: linear-gradient(to bottom right, var(--bg-start), var(--bg-end));
+        background-attachment: fixed;
+      }
+      .font-orbitron { font-family: var(--font-display); }
+      .font-satoshi { font-family: var(--font-heading); }
+      .font-inter { font-family: var(--font-body); }
+      .font-sora { font-family: var(--font-landing); }
+      
+      .glass-card {
+        background: rgba(12, 14, 33, 0.4);
+        backdrop-filter: blur(16px); /* Increased blur */
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform-style: preserve-3d;
+        transition: background-color 1s ease-in-out, box-shadow 0.4s ease;
+      }
+      .glass-card:hover {
+        /* Now handled by Framer Motion, but keep a subtle fallback */
+        box-shadow: 0px 10px 25px rgba(0,0,0,0.25);
+      }
+
+      .themed-input {
+        background-color: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        font-size: 1.1rem; /* Larger input text */
+      }
+      .themed-input:focus {
+        outline: none;
+        border-color: var(--secondary);
+        box-shadow: 0 0 4px var(--secondary); /* Reduced glow */
+      }
+
+      /* Text Animations & Effects */
+      .text-gradient-animated {
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradient-scroll 5s linear infinite;
+        transition: background 1s ease-in-out;
+      }
+      .text-glow {
+        text-shadow: 0 0 3px var(--glow-color); /* Reduced glow */
+        transition: text-shadow 1s ease-in-out;
+      }
+
+      /* AI Chat Bubble Styles */
+      .ai-bubble-chat-gpt-5 { border: 1px solid #10a37f; box-shadow: 0 0 3px #10a37f; }
+      .ai-bubble-perplexity-ai { border: 1px solid #00aaff; box-shadow: 0 0 3px #00aaff; }
+      .ai-bubble-gemini-deepmind { border: 1px solid #F4B400; box-shadow: 0 0 3px #F4B400; }
+      .ai-bubble-claude-3-5 { 
+        background-color: rgba(40, 30, 50, 0.7);
+        border: 1px solid #d97706;
+        font-family: serif;
+      }
+
+      /* Landing Page Specific Styles */
+      .scroll-animate {
+          opacity: 0;
+          transform: translateY(40px) scale(0.98);
+          transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .scroll-animate.is-visible {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+      }
+      .typing-effect {
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+        border-right: .15em solid var(--secondary);
+        animation: typing 2.5s steps(40, end), blink-caret .75s step-end infinite;
+      }
+      @keyframes typing {
+          from { width: 0 }
+          to { width: 100% }
+      }
+       @keyframes blink-caret {
+          from, to { border-color: transparent }
+          50% { border-color: var(--secondary); }
+      }
+      .parallax-bg {
+          background-attachment: fixed;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
+      }
+
+      .bg-grid-pattern {
+        background-image:
+            linear-gradient(to right, rgba(125, 95, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(125, 95, 255, 0.1) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      @keyframes gradient-scroll {
+        0% { background-position: 200% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes data-stream {
+        0% { transform: translateY(-100%) translateX(50px) rotate(45deg); opacity: 0; }
+        50% { opacity: 0.7; }
+        100% { transform: translateY(100vh) translateX(-50px) rotate(45deg); opacity: 0; }
+      }
+
+      @keyframes particle-bloom {
+        from { transform: scale(0); opacity: 0.8; }
+        to { transform: scale(1.2); opacity: 0; }
+      }
+
+      @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(25px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .animate-fade-in-up {
+        animation: fade-in-up 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+      @keyframes speak-animation {
+        0%, 100% { transform: scaleY(1); }
+        20% { transform: scaleY(0.6); }
+        50% { transform: scaleY(1.2); }
+        80% { transform: scaleY(0.8); }
+      }
+      .animate-speak {
+        animation: speak-animation 0.7s infinite ease-in-out;
+      }
+
+      .btn-ghost {
+        background-color: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s ease;
+      }
+      .btn-ghost:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: var(--secondary);
+        color: white;
+      }
+      
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .modal-content {
+        position: relative;
+        max-width: 500px;
+        width: 100%;
+        margin: 1rem;
+        z-index: 51;
+      }
+      
+      .guest-banner {
+        position: absolute;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.5rem;
+      }
+
+      /* New Animation Keyframes for Moods */
+      @keyframes sparkle-rise {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(-120vh); opacity: 0; }
+      }
+
+      @keyframes ripple-expand {
+        from { transform: scale(0); opacity: 1; }
+        to { transform: scale(30); opacity: 0; }
+      }
+
+      @keyframes cloud-drift {
+        from { transform: translateX(-20%); }
+        to { transform: translateX(120%); }
+      }
+
+      /* Custom Scrollbar Styles */
+      ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.2);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--primary);
+        border-radius: 20px;
+        border: 3px solid transparent;
+        background-clip: content-box;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--secondary);
+      }
+
+      /* Developer Dashboard Styles */
+      .dashboard-glow-border {
+        position: relative;
+        border: 1px solid transparent;
+      }
+      .dashboard-glow-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(120deg, var(--primary), var(--secondary));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+      }
+      .dashboard-glow-border:hover::before {
+        opacity: 1;
+      }
+      .chart-bar {
+        animation: grow-bar 0.8s ease-out forwards;
+        transform-origin: bottom;
+      }
+      @keyframes grow-bar {
+        from { transform: scaleY(0); }
+        to { transform: scaleY(1); }
+      }
+      .health-meter {
+        --size: 80px;
+        --border-width: 8px;
+        --color: var(--secondary);
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(farthest-side, rgba(0,0,0,0.5) calc(99% - var(--border-width)), #0000 0),
+          conic-gradient(var(--color) calc(var(--value) * 1%), #0000 0);
+        -webkit-mask: radial-gradient(farthest-side, #0000 calc(99% - var(--border-width)), #000 0);
+        animation: fill-meter 1s ease-out forwards;
+      }
+      @keyframes fill-meter {
+        from { --value: 0; }
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
